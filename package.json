@@ -1,0 +1,34 @@
+{
+  "name": "react-option-charts",
+  "version": "0.0.1",
+  "description": "Option pricing and payoff charts in React",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "prepare": "npm run build",
+    "watch": "tsc --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/adamhwang/react-option-charts"
+  },
+  "keywords": [
+    "react",
+    "option",
+    "pricing",
+    "pnl",
+    "payoff",
+    "chart",
+    "graph"
+  ],
+  "author": "Adam Hwang",
+  "license": "MIT",
+  "dependencies": {
+    "black-scholes": "^1.1.0",
+    "react-financial-charts": "^1.3.2"
+  },
+  "devDependencies": {
+    "@types/react": "^17.0.38",
+    "typescript": "^4.5.4"
+  }
+}
