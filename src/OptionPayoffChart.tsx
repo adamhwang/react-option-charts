@@ -31,12 +31,16 @@ import { formatUSD, range } from "./utils";
 interface OptionLeg { k: number, t: number, v: number, callPut: "call" | "put" };
 type OptionStrategy = {
     name: string;
+    cost?: number;
     color?: string;
+    payoffColor?: string;
     optionLegs: OptionLeg[];
 }
 type OptionPayoffChartProps = Omit<ConstructorParameters<typeof ChartCanvas>[0], "data" | "displayXAccessor" | "margin" | "xScale" | "xAccessor" | "xExtents"> & {
     s?: number;
     r: number;
+
+    showPayoff?: boolean;
 
     strategies: OptionStrategy[];
 };
@@ -47,10 +51,23 @@ type Point = {
 };
 
 const OptionPayoffChart: React.FunctionComponent<OptionPayoffChartProps> = (props) => {
-    const { s, r, strategies, ...chartCanvasProps } = props;
+    const { s, r, showPayoff, strategies, ...chartCanvasProps } = props;
 
     const strategyByName = strategies.reduce((acc, strat) => {
+        strat.cost = strat.cost || (s && strat.optionLegs.reduce((acc, o) => acc + blackScholes(s, o.k, o.t, o.v, r, o.callPut) || 0, 0));
         acc[strat.name] = strat;
+        if (showPayoff) {
+            acc[`${strat.name} Payoff`] = {
+                ...strat,
+                color: strat.payoffColor || strat.color,
+                optionLegs: strat.optionLegs.map(o => {
+                    return {
+                        ...o,
+                        t: 0,
+                    };
+                })
+            };
+        }
         return acc;
     }, {} as { [key: string]: OptionStrategy });
     const strategyNames = Object.keys(strategyByName);
@@ -65,7 +82,8 @@ const OptionPayoffChart: React.FunctionComponent<OptionPayoffChartProps> = (prop
 
     const data = range(maxX - minX, minX).map(x => {
         return strategyNames.reduce((acc, strategyName) => {
-            acc[strategyName] = strategyByName[strategyName].optionLegs.reduce((acc, o) => acc + blackScholes(x, o.k, o.t, o.v, r, o.callPut) || 0, 0);
+            const strat = strategyByName[strategyName];
+            acc[strategyName] = strat.optionLegs.reduce((acc, o) => acc + blackScholes(x, o.k, o.t, o.v, r, o.callPut) || 0, 0) - (strat.cost || 0);
             return acc;
         }, { x } as Point);
     });
