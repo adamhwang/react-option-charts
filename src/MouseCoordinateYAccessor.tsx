@@ -91,7 +91,6 @@ export class MouseCoordinateYAccessor extends React.Component<MouseCoordinateYAc
         }
 
         const y = yAccessor ? yScale(yAccessor(currentItem)) : mouseXY[1];
-        debugger;
 
         const coordinate = displayFormat(yScale.invert(y));
 
