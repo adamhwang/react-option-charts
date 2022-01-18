@@ -1,19 +1,19 @@
 {
   "compilerOptions": {
-    "target": "esnext",
+    "target": "es2017",
     "lib": [ "dom", "dom.iterable", "esnext" ],
-    "allowJs": true,
-    "skipLibCheck": true,
+    "sourceMap": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "node",
     "noImplicitAny": true,
+    "noImplicitThis": true,
+    "noUnusedLocals": true,
     "jsx": "react",
     "outDir": "dist",
     "declaration": true
   },
-  "include": [ "**/*.ts", "**/*.tsx" ],
+  "include": [ "src" ],
   "exclude": [ "dist", "node_modules" ]
 }
