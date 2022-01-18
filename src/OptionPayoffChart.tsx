@@ -28,7 +28,7 @@ import { MouseCoordinateYAccessor } from "./MouseCoordinateYAccessor";
 import { formatUSD, range } from "./utils";
 
 
-interface OptionLeg { k: number, t: number, v: number, callPut: "call" | "put" };
+interface OptionLeg { k: number, t: number, v: number, callPut: "call" | "put", quantity?: number };
 type OptionStrategy = {
     name: string;
     cost?: number;
@@ -53,8 +53,10 @@ type Point = {
 const OptionPayoffChart: React.FunctionComponent<OptionPayoffChartProps> = (props) => {
     const { s, r, showPayoff, strategies, ...chartCanvasProps } = props;
 
+    const calcPrice = (strat: OptionStrategy, underlyingPrice: number) => strat.optionLegs.reduce((acc, o) => acc + (blackScholes(underlyingPrice, o.k, o.t, o.v, r, o.callPut) || 0) * (o.quantity || 1), 0)
+
     const strategyByName = strategies.reduce((acc, strat) => {
-        strat.cost = strat.cost || (s && strat.optionLegs.reduce((acc, o) => acc + blackScholes(s, o.k, o.t, o.v, r, o.callPut) || 0, 0));
+        strat.cost = strat.cost || (s && calcPrice(strat, s));
         acc[strat.name] = strat;
         if (showPayoff) {
             acc[`${strat.name} Payoff`] = {
@@ -83,7 +85,7 @@ const OptionPayoffChart: React.FunctionComponent<OptionPayoffChartProps> = (prop
     const data = range(maxX - minX, minX).map(x => {
         return strategyNames.reduce((acc, strategyName) => {
             const strat = strategyByName[strategyName];
-            acc[strategyName] = strat.optionLegs.reduce((acc, o) => acc + blackScholes(x, o.k, o.t, o.v, r, o.callPut) || 0, 0) - (strat.cost || 0);
+            acc[strategyName] = calcPrice(strat, x) - (strat.cost || 0);
             return acc;
         }, { x } as Point);
     });
