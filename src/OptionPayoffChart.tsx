@@ -27,9 +27,8 @@ import { scaleLinear } from "d3-scale";
 import { MouseCoordinateYAccessor } from "./MouseCoordinateYAccessor";
 import { formatUSD, range } from "./utils";
 
-
-interface OptionLeg { k: number, t: number, v: number, callPut: "call" | "put", quantity?: number };
-type OptionStrategy = {
+export interface OptionLeg { k: number, t: number, v: number, callPut: "call" | "put", quantity?: number };
+export type OptionStrategy = {
     name: string;
     cost?: number;
     color?: string;
