@@ -24,8 +24,8 @@ import {
 import { blackScholes } from "black-scholes";
 import { scaleLinear } from "d3-scale";
 
-import { MouseCoordinateYAccessor } from "./MouseCoordinateYAccessor";
-import { formatUSD, range } from "./utils";
+import { MouseCoordinateYAccessor } from "./MouseCoordinateYAccessor.js";
+import { formatUSD, range } from "./utils.js";
 
 export interface OptionLeg { k: number, t: number, v: number, callPut: "call" | "put", quantity?: number };
 export type OptionStrategy = {
