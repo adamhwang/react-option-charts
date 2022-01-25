@@ -60,6 +60,9 @@ or
 - **callPut** - The type of option to be priced - "call" or "put"
 - **quantity** - Number of contracts, positive for long or negative for short
 
+- **showPayoff** - Optional bool to show payoff chart
+- **payoffTitle** - Optional string to overwrite payoff title. "{0}" will be overwritten by the strategy name
+
 ![Example Iron Condor payoff chart](docs/example.png?raw=true "Iron Condor example")
 
 ## Contribution
