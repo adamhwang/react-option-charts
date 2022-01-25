@@ -25,7 +25,7 @@ import { blackScholes } from "black-scholes";
 import { scaleLinear } from "d3-scale";
 
 import { MouseCoordinateYAccessor } from "./MouseCoordinateYAccessor.js";
-import { formatUSD, range } from "./utils.js";
+import { format, formatUSD, range } from "./utils.js";
 
 export interface OptionLeg { k: number, t: number, v: number, callPut: "call" | "put", quantity?: number };
 export type OptionStrategy = {
@@ -40,6 +40,7 @@ type OptionPayoffChartProps = Omit<ConstructorParameters<typeof ChartCanvas>[0],
     r: number;
 
     showPayoff?: boolean;
+    payoffTitle?: string;
 
     strategies: OptionStrategy[];
 };
@@ -50,7 +51,7 @@ type Point = {
 };
 
 const OptionPayoffChart: React.FunctionComponent<OptionPayoffChartProps> = (props) => {
-    const { s, r, showPayoff, strategies, ...chartCanvasProps } = props;
+    const { s, r, showPayoff, payoffTitle, strategies, ...chartCanvasProps } = props;
 
     const calcPrice = (strat: OptionStrategy, underlyingPrice: number) => strat.optionLegs.reduce((acc, o) => acc + (blackScholes(underlyingPrice, o.k, o.t, o.v, r, o.callPut) || 0) * (o.quantity || 1), 0)
 
@@ -59,8 +60,8 @@ const OptionPayoffChart: React.FunctionComponent<OptionPayoffChartProps> = (prop
         acc[strat.name] = strat;
         if (showPayoff) {
             const minT = Math.min(...strat.optionLegs.map(o => o.t));
-            const payoffTitle = `${strat.name} payoff`;
-            acc[payoffTitle] = {
+            const title = format(payoffTitle || "{0} payoff", strat.name);
+            acc[title] = {
                 ...strat,
                 color: strat.payoffColor || strat.color,
                 optionLegs: strat.optionLegs.map(o => {
