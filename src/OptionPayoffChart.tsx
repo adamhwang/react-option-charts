@@ -58,13 +58,15 @@ const OptionPayoffChart: React.FunctionComponent<OptionPayoffChartProps> = (prop
         strat.cost = strat.cost || (s && calcPrice(strat, s));
         acc[strat.name] = strat;
         if (showPayoff) {
-            acc[`${strat.name} Payoff`] = {
+            const minT = Math.min(...strat.optionLegs.map(o => o.t));
+            const payoffTitle = `${strat.name} payoff`;
+            acc[payoffTitle] = {
                 ...strat,
                 color: strat.payoffColor || strat.color,
                 optionLegs: strat.optionLegs.map(o => {
                     return {
                         ...o,
-                        t: 0,
+                        t: o.t - minT,
                     };
                 })
             };
