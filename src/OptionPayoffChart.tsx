@@ -51,7 +51,7 @@ type Point = {
 };
 
 const OptionPayoffChart: React.FunctionComponent<OptionPayoffChartProps> = (props) => {
-    const { s, r, showPayoff, payoffTitle, strategies, ...chartCanvasProps } = props;
+    const { s, r, showPayoff, payoffTitle, strategies, children, ...chartCanvasProps } = props;
 
     const calcPrice = (strat: OptionStrategy, underlyingPrice: number) => strat.optionLegs.reduce((acc, o) => acc + (blackScholes(underlyingPrice, o.k, o.t, o.v, r, o.callPut) || 0) * (o.quantity || 1), 0)
 
@@ -162,6 +162,7 @@ const OptionPayoffChart: React.FunctionComponent<OptionPayoffChartProps> = (prop
                 {coords}
                 {edges}
                 {tooltips}
+                {children}
             </Chart>
         </ChartCanvas>
     );
