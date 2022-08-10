@@ -28,6 +28,7 @@ import { MouseCoordinateYAccessor } from "./MouseCoordinateYAccessor.js";
 import { format, formatUSD, range } from "./utils.js";
 
 export interface OptionLeg { k: number, t: number, v: number, callPut: "call" | "put", quantity?: number };
+
 export type OptionStrategy = {
     name: string;
     cost?: number;
@@ -35,6 +36,7 @@ export type OptionStrategy = {
     payoffColor?: string;
     optionLegs: OptionLeg[];
 }
+
 type OptionPayoffChartProps = Omit<ConstructorParameters<typeof ChartCanvas>[0], "data" | "displayXAccessor" | "margin" | "xScale" | "xAccessor" | "xExtents"> & {
     s?: number;
     r: number;
@@ -50,13 +52,13 @@ type Point = {
     [key: string]: number;
 };
 
+const calcPrice = (optionLegs: OptionLeg[], underlyingPrice: number, r: number) => optionLegs.reduce((acc, o) => acc + (blackScholes(underlyingPrice, o.k, o.t, o.v, r, o.callPut) || 0) * (o.quantity || 1), 0)
+
 const OptionPayoffChart: React.FunctionComponent<OptionPayoffChartProps> = (props) => {
     const { s, r, showPayoff, payoffTitle, strategies, children, ...chartCanvasProps } = props;
 
-    const calcPrice = (strat: OptionStrategy, underlyingPrice: number) => strat.optionLegs.reduce((acc, o) => acc + (blackScholes(underlyingPrice, o.k, o.t, o.v, r, o.callPut) || 0) * (o.quantity || 1), 0)
-
     const strategyByName = strategies.reduce((acc, strat) => {
-        strat.cost = strat.cost || (s && calcPrice(strat, s));
+        strat.cost = strat.cost || (s && calcPrice(strat.optionLegs, s, r));
         acc[strat.name] = strat;
         if (showPayoff) {
             const minT = Math.min(...strat.optionLegs.map(o => o.t));
@@ -87,7 +89,7 @@ const OptionPayoffChart: React.FunctionComponent<OptionPayoffChartProps> = (prop
     const data = range(maxX - minX, minX).map(x => {
         return strategyNames.reduce((acc, strategyName) => {
             const strat = strategyByName[strategyName];
-            acc[strategyName] = calcPrice(strat, x) - (strat.cost || 0);
+            acc[strategyName] = calcPrice(strat.optionLegs, x, r) - (strat.cost || 0);
             return acc;
         }, { x } as Point);
     });
