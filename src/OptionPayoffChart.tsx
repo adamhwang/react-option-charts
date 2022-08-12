@@ -129,7 +129,7 @@ const OptionPayoffChart: React.FunctionComponent<OptionPayoffChartProps> = (prop
     const data = range(maxX - minX, minX).map(x => {
         return strategyNames.reduce((acc, strategyName) => {
             const strat = strategyByName[strategyName];
-            acc[strategyName] = calcValue(strat.optionLegs, x, r).total;
+            acc[strategyName] = calcValue(strat.optionLegs, x, r).total - (strat.value?.total || 0);
             return acc;
         }, { x } as Point);
     });
