@@ -10,6 +10,7 @@ import {
 import {
     ChartCanvas,
     Chart,
+    GenericChartComponent,
 } from "@react-financial-charts/core";
 import {
     LineSeries,
@@ -29,22 +30,32 @@ import { format, formatUSD, range } from "./utils.js";
 
 export interface OptionLeg { k: number, t: number, v: number, callPut: "call" | "put", quantity?: number };
 
-export type OptionStrategy = {
+export interface IOptionStrategy {
     name: string;
-    cost?: number;
     color?: string;
     payoffColor?: string;
     optionLegs: OptionLeg[];
+};
+
+type OptionStrategy = IOptionStrategy & {
+    value: OptionStrategyValue;
 }
 
-type OptionPayoffChartProps = Omit<ConstructorParameters<typeof ChartCanvas>[0], "data" | "displayXAccessor" | "margin" | "xScale" | "xAccessor" | "xExtents"> & {
-    s?: number;
+export type OptionStrategyValue = {
+    total: number;
+    optionLegValues: number[];
+};
+
+export type OptionPayoffChartProps = Omit<ConstructorParameters<typeof ChartCanvas>[0], "data" | "displayXAccessor" | "margin" | "xScale" | "xAccessor" | "xExtents"> & {
+    s: number;
     r: number;
 
     showPayoff?: boolean;
     payoffTitle?: string;
 
-    strategies: OptionStrategy[];
+    strategies: IOptionStrategy[];
+
+    onCurrentValueChanged?: (x: number, start: { [strategyName: string]: OptionStrategyValue }, current: { [strategyName: string]: OptionStrategyValue }) => void;
 };
 
 type Point = {
@@ -52,13 +63,33 @@ type Point = {
     [key: string]: number;
 };
 
-const calcPrice = (optionLegs: OptionLeg[], underlyingPrice: number, r: number) => optionLegs.reduce((acc, o) => acc + (blackScholes(underlyingPrice, o.k, o.t, o.v, r, o.callPut) || 0) * (o.quantity || 1), 0)
+const calcLegValue = (o: OptionLeg, underlyingPrice: number, r: number) => blackScholes(underlyingPrice, o.k, o.t, o.v, r, o.callPut) || 0;
+
+const calcValue: (optionLegs: OptionLeg[], underlyingPrice: number, r: number) => OptionStrategyValue = (optionLegs, underlyingPrice, r) => {
+    let total = 0;
+    const optionLegValues = optionLegs.reduce((acc, o, i) => {
+        const legValue = calcLegValue(o, underlyingPrice, r) * (o.quantity || 1);
+        total += legValue;
+        acc.push(legValue);
+        return acc;
+    }, [] as number[]);
+    return {
+        total,
+        optionLegValues,
+    };
+};
 
 const OptionPayoffChart: React.FunctionComponent<OptionPayoffChartProps> = (props) => {
-    const { s, r, showPayoff, payoffTitle, strategies, children, ...chartCanvasProps } = props;
+    const { s, r, showPayoff, payoffTitle, strategies, children, onCurrentValueChanged, ...chartCanvasProps } = props;
 
-    const strategyByName = strategies.reduce((acc, strat) => {
-        strat.cost = strat.cost || (s && calcPrice(strat.optionLegs, s, r));
+    const [lastX, setLastX] = React.useState(s);
+
+    const strategyByName = strategies.reduce((acc, strategy) => {
+        const strat: OptionStrategy = {
+            ...strategy,
+            value: calcValue(strategy.optionLegs, s, r),
+        };
+        
         acc[strat.name] = strat;
         if (showPayoff) {
             const minT = Math.min(...strat.optionLegs.map(o => o.t));
@@ -77,6 +108,15 @@ const OptionPayoffChart: React.FunctionComponent<OptionPayoffChartProps> = (prop
         return acc;
     }, {} as { [key: string]: OptionStrategy });
     const strategyNames = Object.keys(strategyByName);
+    const strategyValues = strategyNames.reduce((acc: { [strategyName: string ]: OptionStrategyValue}, strategyName: string) => {
+        acc[strategyName] = strategyByName[strategyName].value;
+        return acc;
+    }, {});
+
+    React.useEffect(() => {
+        onCurrentValueChanged && onCurrentValueChanged(s, strategyValues, strategyValues);
+    }, [s, r, showPayoff, strategies]);
+
     const allLegs = strategies.flatMap(strat => strat.optionLegs);
 
     const v = Math.max(...allLegs.map(o => o.v));
@@ -89,7 +129,7 @@ const OptionPayoffChart: React.FunctionComponent<OptionPayoffChartProps> = (prop
     const data = range(maxX - minX, minX).map(x => {
         return strategyNames.reduce((acc, strategyName) => {
             const strat = strategyByName[strategyName];
-            acc[strategyName] = calcPrice(strat.optionLegs, x, r) - (strat.cost || 0);
+            acc[strategyName] = calcValue(strat.optionLegs, x, r).total - (strat.value?.total || 0);
             return acc;
         }, { x } as Point);
     });
@@ -143,6 +183,21 @@ const OptionPayoffChart: React.FunctionComponent<OptionPayoffChartProps> = (prop
         />
     ));
 
+    const currentValueChanged = (ctx: CanvasRenderingContext2D, { currentItem }: any) => {
+        const { x, ...strategies} = !!currentItem && currentItem;
+
+        if (x === lastX) return;
+        else setLastX(x);
+
+        const currentValues = Object.keys(strategies)?.reduce((acc: { [strategyName: string ]: OptionStrategyValue}, strategyName: string) => {
+            if (strategyByName[strategyName]) {
+                acc[strategyName] = calcValue(strategyByName[strategyName].optionLegs, x, r);
+            }
+            return acc;
+        }, {});
+        onCurrentValueChanged && onCurrentValueChanged(x, strategyValues, currentValues);
+    };
+    
     return (
         <ChartCanvas
             {...chartCanvasProps}
@@ -160,6 +215,11 @@ const OptionPayoffChart: React.FunctionComponent<OptionPayoffChartProps> = (prop
                     orient="bottom"
                     displayFormat={formatUSD}
                 />
+                {onCurrentValueChanged && <GenericChartComponent
+                    clip={false}
+                    canvasDraw={currentValueChanged}
+                    drawOn={["mousemove"]}
+                />}
                 {series}
                 {coords}
                 {edges}
