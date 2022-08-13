@@ -35,6 +35,9 @@ export interface IOptionStrategy {
     color?: string;
     payoffColor?: string;
     optionLegs: OptionLeg[];
+    
+    showPayoff?: boolean;
+    payoffTitle?: string;
 };
 
 type OptionStrategy = IOptionStrategy & {
@@ -49,9 +52,6 @@ export type OptionStrategyValue = {
 export type OptionPayoffChartProps = Omit<ConstructorParameters<typeof ChartCanvas>[0], "data" | "displayXAccessor" | "margin" | "xScale" | "xAccessor" | "xExtents"> & {
     s: number;
     r: number;
-
-    showPayoff?: boolean;
-    payoffTitle?: string;
 
     strategies: IOptionStrategy[];
 
@@ -80,7 +80,7 @@ const calcValue: (optionLegs: OptionLeg[], underlyingPrice: number, r: number) =
 };
 
 const OptionPayoffChart: React.FunctionComponent<OptionPayoffChartProps> = (props) => {
-    const { s, r, showPayoff, payoffTitle, strategies, children, onCurrentValueChanged, ...chartCanvasProps } = props;
+    const { s, r, strategies, children, onCurrentValueChanged, ...chartCanvasProps } = props;
 
     const [lastX, setLastX] = React.useState(s);
 
@@ -91,9 +91,9 @@ const OptionPayoffChart: React.FunctionComponent<OptionPayoffChartProps> = (prop
         };
         
         acc[strat.name] = strat;
-        if (showPayoff) {
+        if (strat.showPayoff) {
             const minT = Math.min(...strat.optionLegs.map(o => o.t));
-            const title = format(payoffTitle || "{0} payoff", strat.name);
+            const title = format(strat.payoffTitle || "{0} payoff", strat.name);
             acc[title] = {
                 ...strat,
                 color: strat.payoffColor || strat.color,
@@ -115,7 +115,7 @@ const OptionPayoffChart: React.FunctionComponent<OptionPayoffChartProps> = (prop
 
     React.useEffect(() => {
         onCurrentValueChanged && onCurrentValueChanged(s, strategyValues, strategyValues);
-    }, [s, r, showPayoff, strategies]);
+    }, [s, r, strategies]);
 
     const allLegs = strategies.flatMap(strat => strat.optionLegs);
 
