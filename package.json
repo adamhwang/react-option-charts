@@ -1,6 +1,6 @@
 {
   "name": "react-option-charts",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Option pricing and payoff charts in React",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
