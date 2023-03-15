@@ -26,7 +26,7 @@ import { blackScholes } from "black-scholes";
 import { scaleLinear } from "d3-scale";
 
 import { MouseCoordinateYAccessor } from "./MouseCoordinateYAccessor.js";
-import { format, formatUSD, range } from "./utils.js";
+import { format, formatUSD, rangeMinSize } from "./utils.js";
 
 export interface OptionLeg { k: number, t: number, v: number, callPut: "call" | "put", quantity?: number };
 
@@ -126,7 +126,7 @@ const OptionPayoffChart: React.FunctionComponent<OptionPayoffChartProps> = (prop
     const minX = Math.floor(Math.min(...keyXs) * Math.max(0, 1 - v));
     const maxX = Math.ceil(Math.max(...keyXs) * Math.min(2, 1 + v));
 
-    const data = range(maxX - minX, minX).map(x => {
+    const data = rangeMinSize(maxX - minX, minX).map(x => {
         return strategyNames.reduce((acc, strategyName) => {
             const strat = strategyByName[strategyName];
             acc[strategyName] = calcValue(strat.optionLegs, x, r).total - (strat.value?.total || 0);
