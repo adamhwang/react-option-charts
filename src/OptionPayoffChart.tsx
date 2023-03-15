@@ -123,8 +123,13 @@ const OptionPayoffChart: React.FunctionComponent<OptionPayoffChartProps> = (prop
     const keyXs = allLegs.map(o => o.k);
     if (s) keyXs.push(s);
 
-    const minX = Math.floor(Math.min(...keyXs) * Math.max(0, 1 - v));
-    const maxX = Math.ceil(Math.max(...keyXs) * Math.min(2, 1 + v));
+    let minX = Math.floor(Math.min(...keyXs) * Math.max(0, 1 - v));
+    let maxX = Math.ceil(Math.max(...keyXs) * Math.min(2, 1 + v));
+
+    if (maxX - minX == 1) {
+        minX = Math.max(0, minX - 1);
+        maxX += 1;
+    }
 
     const data = rangeMinSize(maxX - minX, minX).map(x => {
         return strategyNames.reduce((acc, strategyName) => {
