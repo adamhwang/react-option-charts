@@ -119,7 +119,7 @@ const OptionPayoffChart: React.FunctionComponent<OptionPayoffChartProps> = (prop
 
     const allLegs = strategies.flatMap(strat => strat.optionLegs);
 
-    const v = Math.ceil(Math.max(...allLegs.map(o => o.v)));
+    const v = Math.max(...allLegs.map(o => o.v));
     const keyXs = allLegs.map(o => o.k);
     if (s) keyXs.push(s);
 
