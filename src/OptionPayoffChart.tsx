@@ -28,7 +28,7 @@ import { scaleLinear } from "d3-scale";
 import { MouseCoordinateYAccessor } from "./MouseCoordinateYAccessor.js";
 import { format, formatUSD, rangeMinSize } from "./utils.js";
 
-export interface OptionLeg { k: number, t: number, v: number, callPut: "call" | "put", quantity?: number };
+export interface OptionLeg { k: number, t: number, v: number, callPut: "call" | "put" | "underlying", quantity?: number };
 
 export interface IOptionStrategy {
     name: string;
@@ -63,7 +63,7 @@ type Point = {
     [key: string]: number;
 };
 
-const calcLegValue = (o: OptionLeg, underlyingPrice: number, r: number) => blackScholes(underlyingPrice, o.k, o.t, o.v, r, o.callPut) || 0;
+const calcLegValue = (o: OptionLeg, underlyingPrice: number, r: number) => o.callPut === "underlying" ? (underlyingPrice) : blackScholes(underlyingPrice, o.k, o.t, o.v, r, o.callPut) || 0;
 
 const calcValue: (optionLegs: OptionLeg[], underlyingPrice: number, r: number) => OptionStrategyValue = (optionLegs, underlyingPrice, r) => {
     let total = 0;
